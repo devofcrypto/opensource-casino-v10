@@ -1,29 +1,13 @@
-# استخدام صورة PHP مع Apache
 FROM php:8.1-apache
 
-# تثبيت التمديدات المطلوبة
-RUN apt-get update && apt-get install -y \
-    libpng-dev libjpeg-dev libfreetype6-dev zip unzip git curl && \
-    docker-php-ext-configure gd --with-freetype --with-jpeg && \
-    docker-php-ext-install gd pdo pdo_mysql
+# نسخ الملفات للمجلد الذي يعمل فيه Apache
+COPY . /var/www/html/
 
-# نسخ ملفات المشروع إلى الحاوية
-COPY . /var/www/html
+# تفعيل mod_rewrite لـ Apache
+RUN a2enmod rewrite
 
-# تعيين مجلد العمل
-WORKDIR /var/www/html
+# إعدادات صلاحيات بسيطة
+RUN chown -R www-data:www-data /var/www/html && chmod -R 755 /var/www/html
 
-# تثبيت Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-# تثبيت الاعتماديات باستخدام Composer
-RUN composer install --no-interaction --optimize-autoloader
-
-# تعيين الأذونات المناسبة
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-
-# فتح المنفذ 80
 EXPOSE 80
 
-# بدء Apache
-CMD ["apache2-foreground"]
